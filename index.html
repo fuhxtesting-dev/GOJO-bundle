@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FX FuhX — Custom SMS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Syne:wght@700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg0: #07060f;
+  --bg1: #0f0d1e;
+  --card: #12102280;
+  --cyan: #22ffe4;
+  --purple: #a855f7;
+  --pink: #f72585;
+  --yellow: #ffe94a;
+  --text: #f0ecff;
+  --sub: #8b84b0;
+  --border: rgba(255,255,255,0.08);
+  --red: #ff4060;
+  --green: #1affd5;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  min-height: 100vh;
+  background: var(--bg0);
+  font-family: 'Space Grotesk', sans-serif;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-x: hidden;
+}
+
+/* animated mesh bg */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 20% 15%, rgba(168,85,247,0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 85% 80%, rgba(34,255,228,0.13) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 30% at 75% 10%, rgba(247,37,133,0.10) 0%, transparent 55%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* noise grain */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: 180px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+.wrap {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 460px;
+}
+
+/* ─── HEADER ─── */
+.top-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--cyan);
+  border: 1px solid rgba(34,255,228,0.3);
+  background: rgba(34,255,228,0.07);
+  padding: 5px 14px;
+  border-radius: 100px;
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 0 3px rgba(26,255,213,0.2);
+  animation: pulse 2s ease infinite;
+}
+
+@keyframes pulse {
+  0%,100% { box-shadow: 0 0 0 3px rgba(26,255,213,0.2); }
+  50% { box-shadow: 0 0 0 7px rgba(26,255,213,0); }
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.brand-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: clamp(36px, 9vw, 52px);
+  line-height: 1;
+  letter-spacing: -1px;
+  position: relative;
+  display: inline-block;
+}
+
+.brand-title .fx {
+  color: var(--cyan);
+  text-shadow:
+    0 0 30px rgba(34,255,228,0.6),
+    0 0 60px rgba(34,255,228,0.3);
+}
+
+.brand-title .fuhx {
+  color: #fff;
+  text-shadow: 0 0 40px rgba(168,85,247,0.5);
+}
+
+.brand-sub {
+  margin-top: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--sub);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.brand-sub::before, .brand-sub::after {
+  content: '';
+  height: 1px;
+  width: 36px;
+  background: linear-gradient(90deg, transparent, var(--sub));
+}
+.brand-sub::after { background: linear-gradient(90deg, var(--sub), transparent); }
+
+/* ─── CARD ─── */
+.card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 30px 28px 28px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow:
+    0 0 0 1px rgba(34,255,228,0.06),
+    0 30px 80px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(255,255,255,0.09);
+  position: relative;
+  overflow: hidden;
+}
+
+.card-glow {
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, rgba(168,85,247,0.2) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.card-line {
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--purple), var(--pink), transparent);
+  opacity: 0.8;
+}
+
+/* ─── FIELDS ─── */
+.field { margin-bottom: 20px; }
+
+.field-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 9px;
+}
+
+.field-label span {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--sub);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.field-label span::before {
+  content: '';
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--purple);
+  box-shadow: 0 0 7px var(--purple);
+}
+
+.char-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--sub);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 9px;
+  transition: color 0.2s;
+}
+
+textarea, input[type="tel"] {
+  width: 100%;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: var(--text);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  padding: 13px 16px;
+  outline: none;
+  transition: all 0.25s;
+  resize: none;
+  caret-color: var(--cyan);
+}
+
+textarea { height: 110px; }
+
+textarea::placeholder, input::placeholder { color: rgba(139,132,176,0.6); }
+
+textarea:focus, input:focus {
+  border-color: rgba(34,255,228,0.45);
+  background: rgba(34,255,228,0.04);
+  box-shadow:
+    0 0 0 3px rgba(34,255,228,0.09),
+    inset 0 1px 0 rgba(34,255,228,0.05);
+}
+
+/* phone row */
+.phone-row {
+  display: flex;
+  gap: 0;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.25s;
+  background: rgba(255,255,255,0.04);
+}
+
+.phone-row:focus-within {
+  border-color: rgba(34,255,228,0.45);
+  background: rgba(34,255,228,0.04);
+  box-shadow: 0 0 0 3px rgba(34,255,228,0.09);
+}
+
+.phone-flag {
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  font-size: 20px;
+  background: rgba(255,255,255,0.03);
+  flex-shrink: 0;
+}
+
+.phone-row input {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  flex: 1;
+  padding: 13px 14px;
+}
+
+.phone-row input:focus {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* digit tracker */
+.digit-track {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.digit-dot {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.digit-dot.filled {
+  background: var(--cyan);
+  box-shadow: 0 0 6px rgba(34,255,228,0.5);
+}
+
+.digit-dot.filled.mid { background: var(--yellow); box-shadow: 0 0 6px rgba(255,233,74,0.5); }
+.digit-dot.filled.done { background: var(--green); box-shadow: 0 0 8px rgba(26,255,213,0.6); }
+
+.hint {
+  font-size: 11px;
+  color: var(--sub);
+  margin-top: 6px;
+  min-height: 16px;
+  transition: color 0.2s;
+}
+.hint.ok { color: var(--green); }
+.hint.warn { color: var(--yellow); }
+
+/* ─── SEND BUTTON ─── */
+.btn-wrap {
+  margin-top: 8px;
+  position: relative;
+}
+
+.btn-glow-bg {
+  position: absolute;
+  inset: -2px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--cyan), var(--purple), var(--pink));
+  opacity: 0;
+  filter: blur(8px);
+  transition: opacity 0.3s;
+  z-index: 0;
+}
+
+.btn-wrap:hover .btn-glow-bg { opacity: 0.5; }
+
+.btn-send {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 16px 20px;
+  border: none;
+  border-radius: 14px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(135deg, #1bddcc 0%, #7c3aed 50%, #db2777 100%);
+  background-size: 200% auto;
+  transition: background-position 0.4s, transform 0.15s, box-shadow 0.3s, opacity 0.2s;
+  box-shadow: 0 6px 28px rgba(124,58,237,0.45), 0 2px 8px rgba(34,255,228,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-send:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 36px rgba(124,58,237,0.55), 0 4px 12px rgba(34,255,228,0.3);
+}
+
+.btn-send:active { transform: scale(0.98); }
+
+.btn-send:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.send-icon { font-size: 18px; transition: transform 0.3s; }
+.btn-send:hover .send-icon { transform: translateX(4px) rotate(-10deg); }
+
+.spinner {
+  display: none;
+  width: 20px; height: 20px;
+  border: 2.5px solid rgba(255,255,255,0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.btn-send.loading .send-icon,
+.btn-send.loading .btn-label { display: none; }
+.btn-send.loading .spinner { display: block; }
+
+/* ─── TOAST ─── */
+.toast {
+  margin-top: 16px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  font-weight: 500;
+  display: none;
+  align-items: center;
+  gap: 10px;
+  animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.toast.success {
+  display: flex;
+  background: rgba(26,255,213,0.08);
+  border: 1px solid rgba(26,255,213,0.25);
+  color: var(--green);
+}
+
+.toast.error {
+  display: flex;
+  background: rgba(255,64,96,0.08);
+  border: 1px solid rgba(255,64,96,0.3);
+  color: var(--red);
+}
+
+.toast-icon { font-size: 18px; flex-shrink: 0; }
+
+/* ─── FOOTER ─── */
+.footer {
+  margin-top: 22px;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(139,132,176,0.5);
+  letter-spacing: 1.5px;
+}
+.footer b { color: rgba(139,132,176,0.8); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top-label">
+    <div class="live-dot"></div>
+    <div class="pill">SMS Gateway Active</div>
+  </div>
+
+  <div class="brand">
+    <div class="brand-title">
+      <span class="fx">FX </span><span class="fuhx">FuhX</span>
+    </div>
+    <div class="brand-sub">Custom SMS</div>
+  </div>
+
+  <div class="card">
+    <div class="card-glow"></div>
+    <div class="card-line"></div>
+
+    <!-- Message -->
+    <div class="field">
+      <div class="field-label">
+        <span>Your Message</span>
+        <div class="char-badge" id="charBadge">0 / 500</div>
+      </div>
+      <textarea id="msgBox" placeholder="এখানে message লিখো..." maxlength="500" oninput="onMsgInput()"></textarea>
+    </div>
+
+    <!-- Phone -->
+    <div class="field">
+      <div class="field-label">
+        <span>Phone Number</span>
+      </div>
+      <div class="phone-row">
+        <div class="phone-flag">🇧🇩</div>
+        <input type="tel" id="numBox" placeholder="017XXXXXXXX" maxlength="11"
+               oninput="onNumInput()" onkeypress="return onlyDigits(event)">
+      </div>
+      <div class="digit-track" id="digitTrack"></div>
+      <div class="hint" id="numHint"></div>
+    </div>
+
+    <!-- Button -->
+    <div class="btn-wrap">
+      <div class="btn-glow-bg"></div>
+      <button class="btn-send" id="sendBtn" onclick="sendSMS()">
+        <span class="send-icon">✈️</span>
+        <span class="btn-label">Send SMS</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
+    <div class="toast" id="toast">
+      <span class="toast-icon" id="toastIcon"></span>
+      <span id="toastMsg"></span>
+    </div>
+  </div>
+
+  <div class="footer">© 2025 &nbsp;<b>FX FuhX</b>&nbsp; — All Rights Reserved</div>
+</div>
+
+<script>
+// build 11 digit dots
+const track = document.getElementById('digitTrack');
+for (let i = 0; i < 11; i++) {
+  const d = document.createElement('div');
+  d.className = 'digit-dot';
+  d.id = 'dot' + i;
+  track.appendChild(d);
+}
+
+function onlyDigits(e) {
+  return /[0-9]/.test(e.key);
+}
+
+function onMsgInput() {
+  const len = document.getElementById('msgBox').value.length;
+  const badge = document.getElementById('charBadge');
+  badge.textContent = len + ' / 500';
+  badge.style.color = len > 400 ? '#ffe94a' : '';
+}
+
+function onNumInput() {
+  const val = document.getElementById('numBox').value.replace(/\D/g, '');
+  document.getElementById('numBox').value = val;
+  const hint = document.getElementById('numHint');
+
+  for (let i = 0; i < 11; i++) {
+    const dot = document.getElementById('dot' + i);
+    dot.className = 'digit-dot';
+    if (i < val.length) {
+      if (val.length < 6) dot.classList.add('filled');
+      else if (val.length < 11) dot.classList.add('filled', 'mid');
+      else dot.classList.add('filled', 'done');
+    }
+  }
+
+  if (val.length === 0) {
+    hint.textContent = '';
+    hint.className = 'hint';
+  } else if (val.length < 11) {
+    hint.textContent = `আরও ${11 - val.length} সংখ্যা দরকার`;
+    hint.className = 'hint warn';
+  } else {
+    hint.textContent = '✓ নম্বর সঠিক আছে';
+    hint.className = 'hint ok';
+  }
+}
+
+async function sendSMS() {
+  const msg = document.getElementById('msgBox').value.trim();
+  const num = document.getElementById('numBox').value.trim();
+  const btn = document.getElementById('sendBtn');
+
+  hideToast();
+
+  if (!msg) { showToast('error', '⚠️', 'আগে message লিখো!'); return; }
+  if (num.length < 11) {
+    showToast('error', '📵', `${11 - num.length} সংখ্যা কম আছে! ১১ ডিজিট দরকার।`);
+    document.getElementById('numBox').focus();
+    return;
+  }
+
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  const url = `https://mahirvai.com/sms.php?key=AM-8DJFuhxffOsTX&number=${encodeURIComponent(num)}&msg=${encodeURIComponent(msg)}`;
+
+  try {
+    const res = await fetch(url, { mode: 'no-cors' });
+    showToast('success', '✅', `SMS পাঠানো হয়েছে → ${num}`);
+    document.getElementById('msgBox').value = '';
+    document.getElementById('numBox').value = '';
+    onMsgInput(); onNumInput();
+  } catch (e) {
+    showToast('error', '❌', 'Network error! Connection check করো।');
+  }
+
+  btn.classList.remove('loading');
+  btn.disabled = false;
+}
+
+function showToast(type, icon, msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastIcon').textContent = icon;
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = 'toast ' + type;
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(hideToast, 5000);
+}
+
+function hideToast() {
+  document.getElementById('toast').className = 'toast';
+}
+</script>
+</body>
+</html>
