@@ -558,7 +558,7 @@ function onNumInput() {
   }
 }
 
-async function sendSMS() {
+function sendSMS() {
   const msg = document.getElementById('msgBox').value.trim();
   const num = document.getElementById('numBox').value.trim();
   const btn = document.getElementById('sendBtn');
@@ -575,20 +575,20 @@ async function sendSMS() {
   btn.classList.add('loading');
   btn.disabled = true;
 
-  const url = `https://mahirvai.com/sms.php?key=AM-8DJFuhxffOsTX&number=${encodeURIComponent(num)}&msg=${encodeURIComponent(msg)}`;
+  const url = `https://mahirvai.com/sms.php?key=AM–8DJFuhxffOsTX&number=${encodeURIComponent(num)}&msg=${encodeURIComponent(msg)}`;
 
-  try {
-    const res = await fetch(url, { mode: 'no-cors' });
+  // img tag দিয়ে hit — CORS block হয় না
+  const img = new Image();
+  img.onload = img.onerror = function() {
     showToast('success', '✅', `SMS পাঠানো হয়েছে → ${num}`);
     document.getElementById('msgBox').value = '';
     document.getElementById('numBox').value = '';
-    onMsgInput(); onNumInput();
-  } catch (e) {
-    showToast('error', '❌', 'Network error! Connection check করো।');
-  }
-
-  btn.classList.remove('loading');
-  btn.disabled = false;
+    onMsgInput();
+    onNumInput();
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  };
+  img.src = url;
 }
 
 function showToast(type, icon, msg) {
@@ -605,4 +605,4 @@ function hideToast() {
 }
 </script>
 </body>
-</html>
+  </html>
